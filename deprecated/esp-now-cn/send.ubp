@@ -1,0 +1,63 @@
+module main
+author unknown
+version 1 0 
+description ''
+
+script 63 50 {
+whenStarted
+comment '接收方的MAC地址'
+'添加目标设备MAC地址' 'E4:65:B8:74:AF:7D'
+forever {
+  setUserLED false
+  waitMillis 100
+  local 'tmp' ('[data:join]' (analogReadOp 39) ',' (analogReadOp 35))
+  'ESP-NOW单播' tmp
+  sayIt tmp
+  setUserLED true
+  waitMillis 100
+}
+}
+
+
+module 'ESP-NOW'
+author unknown
+version 1 0 
+description ''
+variables message 
+
+  spec ' ' 'ESP-NOW单播' 'ESP-NOW单播 _' 'str' 'text'
+  spec 'r' 'ESP-NOW最新单播消息' 'ESP-NOW最新单播消息'
+  spec 'r' 'ESP-NOW最新广播消息' 'ESP-NOW最新广播消息'
+  spec ' ' 'myBlock' 'ESP-NOW广播 _' 'str' 'text'
+  spec ' ' '设备地址' '添加单播设备MAC地址 _' 'str' 'text'
+
+to 'ESP-NOW单播' message {
+  callCustomCommand '[ble:EspNowUnicastSend]' ('[data:makeList]' message)
+}
+
+to 'ESP-NOW最新单播消息' {
+  local 'event' (callCustomReporter '[ble:EspNowUnicastLastEvent]')
+  if (event != (booleanConstant false)) {
+    return (at 1 event)
+  } else {
+    return (booleanConstant false)
+  }
+}
+
+to 'ESP-NOW最新广播消息' {
+  local 'event' (callCustomReporter '[ble:EspNowLastEvent]')
+  if (event != (booleanConstant false)) {
+    return (at 1 event)
+  } else {
+    return (booleanConstant false)
+  }
+}
+
+to myBlock message {
+  callCustomCommand '[ble:EspNowBroadcast]' ('[data:makeList]' message)
+}
+
+to '设备地址' macAddress {
+  callCustomCommand '[ble:EspNowUnicastSetup]' ('[data:makeList]' macAddress)
+}
+

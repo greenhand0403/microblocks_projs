@@ -1,0 +1,164 @@
+module main
+author unknown
+version 1 0 
+description ''
+variables anaOutputPins digPins anaPins rows cols touchPins touchPinsIdle touchPinsPress speakPin speakShutDownPin buttonPins startgame 
+
+  spec ' ' '初始化引脚' '初始化引脚'
+  spec ' ' '测试引脚功能' '测试引脚功能'
+  spec ' ' '点亮5x' '设置5x5矩阵一盏灯 _ _' 'num auto'
+  spec ' ' '熄灭所有灯' '熄灭所有灯'
+  spec ' ' '骰子' '骰子 _' 'num' 10
+
+to '初始化引脚' {
+  touchPins = ('[data:makeList]' 32 27 13)
+  cols = ('[data:makeList]' 0 5 18 19 15)
+  rows = ('[data:makeList]' 2 12 21 22 23)
+  digPins = ('[data:makeList]' 32 16 17 25 33 27 13)
+  anaPins = ('[data:makeList]' 32 25 33 27 13)
+  anaOutputPins = ('[data:makeList]' 32 25 33 27 13)
+  speakPin = 25
+  speakShutDownPin = 14
+  buttonPins = ('[data:makeList]' 36 39)
+  touchPinsIdle = (newList (size touchPins))
+  touchPinsPress = (newList (size touchPins))
+}
+
+to '测试引脚功能' {
+  forever {
+    if false {
+      comment '5x5灯阵'
+      for i (size rows) {
+        digitalWriteOp (at i rows) true
+        for j (size cols) {
+          sayIt i j
+          digitalWriteOp (at j cols) false
+          waitMillis 1000
+          digitalWriteOp (at j cols) true
+        }
+        digitalWriteOp (at i rows) false
+      }
+    }
+    if false {
+      comment '数字管脚输出'
+      for i (size digPins) {
+        sayIt (at i digPins)
+        digitalWriteOp (at i digPins) true
+        waitMillis 300
+        digitalWriteOp (at i digPins) false
+        waitMillis 300
+      }
+    }
+    if false {
+      comment '模拟管脚输出'
+      for i (size anaOutputPins) {
+        for j ('[data:makeList]' 0 0 650 1023 1023 650 0 0) {
+          analogWriteOp (at i anaOutputPins) j
+          sayIt (at i anaOutputPins) j
+          waitMillis 1000
+        }
+      }
+    }
+    if false {
+      comment '数字管脚输入'
+      var = ''
+      for i (size digPins) {
+        var = ('[data:join]' var ' D' (at i digPins) ':' (digitalReadOp (at i digPins)) '
+')
+      }
+      sayIt var
+      waitMillis 30
+    }
+    if false {
+      comment '模拟管脚输入'
+      var = ''
+      for i (size anaPins) {
+        var = ('[data:join]' var ' A' (at i anaPins) ':' (analogReadOp (at i anaPins)) '
+')
+      }
+      sayIt var
+      waitMillis 30
+    }
+    if false {
+      comment '按键'
+      sayIt (digitalReadOp 36) (digitalReadOp 39)
+      waitMillis 30
+    }
+    if false {
+      comment '触摸引脚'
+      local 'var' ''
+      for i touchPins {
+        var = ('[data:join]' var ' TPIN' i ':' ('[sensors:touchRead]' i) '
+')
+      }
+      graphIt ('[sensors:touchRead]' (at 1 touchPins)) ('[sensors:touchRead]' (at 3 touchPins))
+      sayIt var
+      waitMillis 30
+    }
+  }
+}
+
+to '点亮5x' 编号 点亮 {
+  local 'r' (((编号 - 1) / 5) + 1)
+  local 'c' (((编号 - 1) % 5) + 1)
+  digitalWriteOp (at r rows) 点亮
+  if (('[data:find]' 编号 ('[data:makeList]' 6 11 16 21)) != -1) {
+    for i 4 {
+      digitalWriteOp (at (i + 1) cols) 点亮
+    }
+  } else {
+    digitalWriteOp (at c cols) (not 点亮)
+  }
+}
+
+to '熄灭所有灯' {
+  for i rows {
+    digitalWriteOp i false
+  }
+  for i cols {
+    digitalWriteOp i true
+  }
+}
+
+to '骰子' foo {
+  if (foo == 1) {
+    '点亮5x' 13 (booleanConstant true)
+  } (foo == 2) {
+    '点亮5x' 12 (booleanConstant true)
+    '点亮5x' 14 (booleanConstant true)
+  } (foo == 3) {
+    '点亮5x' 11 (booleanConstant true)
+    '点亮5x' 13 (booleanConstant true)
+    '点亮5x' 15 (booleanConstant true)
+  } (foo == 4) {
+    '点亮5x' 9 (booleanConstant true)
+    '点亮5x' 17 (booleanConstant true)
+  } (foo == 5) {
+    '点亮5x' 11 (booleanConstant true)
+    '点亮5x' 12 (booleanConstant true)
+    '点亮5x' 13 (booleanConstant true)
+    '点亮5x' 14 (booleanConstant true)
+    '点亮5x' 15 (booleanConstant true)
+  } else {
+    '点亮5x' 2 (booleanConstant true)
+    '点亮5x' 12 (booleanConstant true)
+    '点亮5x' 14 (booleanConstant true)
+    '点亮5x' 24 (booleanConstant true)
+  }
+  waitMillis 1500
+}
+
+script 58 50 {
+whenStarted
+'初始化引脚'
+'点亮5x' 13 (booleanConstant true)
+waitMillis (random 2500 4500)
+'点亮5x' 13 (booleanConstant false)
+startgame = (millisOp)
+}
+
+script 65 321 {
+whenCondition (not (digitalReadOp (at 1 buttonPins) 'up'))
+sayIt ((millisOp) - startgame)
+}
+
