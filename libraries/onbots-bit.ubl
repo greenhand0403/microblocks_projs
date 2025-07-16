@@ -113,15 +113,17 @@ variables rows cols ledIntensity ledMatrixUpdateTime ledMatrixScrollTime
   space
   spec ' ' 'set_LED_matrix_single' 'set LED matrix single _ _ (on/off)' 'num booleanConstant' 1 true
   spec ' ' 'set_LED_Intensity' 'set LED Intensity _ (1-255)' 'num' 10
-  spec ' ' 'LED_matrix_clear' 'LED matrix clear'
   spec ' ' 'LED_matrix_show' 'LED matrix show _' 'num' 31761856
   spec ' ' 'LED_matrix_show_scroll' 'LED matrix show scroll _' 'num' 31761856
   spec 'r' '_get_LED_matrix_left_shift_result' 'LED matrix show _ left shift _ bit,reverse? _ mask _' 'num num bool num' 31761856 1 false 33554431
   spec ' ' 'LED_matrix_show_scroll_string' 'LED matrix show string scroll _ col space(1-4) _' 'str num' '10' 1
   space
   spec ' ' 'test_LED_func' 'test_LED_func'
+  spec ' ' 'LED matrix all lighton' 'LED matrix all lighton'
+  spec ' ' 'LED_matrix_clear' 'LED matrix clear'
 
 to '_init_ledMatrixPins' {
+  'set_LED_Intensity' 255
   cols = ('[data:makeList]' 4 5 18 19 15)
   rows = ('[data:makeList]' 2 12 21 22 23)
 }
@@ -238,23 +240,12 @@ to 'set_LED_Intensity' foo {
   ledIntensity = foo
 }
 
-to 'LED_matrix_clear' {
-  for i rows {
-    digitalWriteOp i false
-  }
-  for i cols {
-    digitalWriteOp i true
-  }
-}
-
-to 'LED_matrix_show' foo {
+to LED_matrix_show foo {
   local 'var' foo
   for i 5 {
+    digitalWriteOp (at i rows) true
     for j 5 {
-      if ((var & 1) == 1) {
-        digitalWriteOp (at i rows) true
-        digitalWriteOp (at j cols) false
-      }
+      if ((var & 1) == 1) {digitalWriteOp (at j cols) false}
       var = (var >> 1)
     }
     waitMicros (16 * ledIntensity)
@@ -334,8 +325,7 @@ to 'LED_matrix_show_scroll_string' foo bar {
 to test_LED_func {
   ledMatrixUpdateTime = 1000
   ledMatrixScrollTime = 150
-  'init_ledMatrixPins'
-  'set_LED_Intensity' 255
+  '_init_ledMatrixPins'
   if false {
     comment '5x5 led matrix'
     for i (size rows) {
@@ -357,4 +347,24 @@ to test_LED_func {
     'LED_matrix_show_scroll' (_led_textImage (at i var))
   }
   'LED_matrix_show_scroll_string' 'onbots:bit' 1
+}
+
+to 'LED matrix all lighton' {
+  '_init_ledMatrixPins'
+  for i rows {
+    digitalWriteOp i true
+  }
+  for i cols {
+    digitalWriteOp i false
+  }
+}
+
+to 'LED_matrix_clear' {
+  '_init_ledMatrixPins'
+  for i rows {
+    digitalWriteOp i false
+  }
+  for i cols {
+    digitalWriteOp i true
+  }
 }
