@@ -126,6 +126,8 @@ to '_init_ledMatrixPins' {
   'set_LED_Intensity' 255
   cols = ('[data:makeList]' 0 5 18 19 15)
   rows = ('[data:makeList]' 2 12 21 22 23)
+  ledMatrixUpdateTime = 1000
+  ledMatrixScrollTime = 150
 }
 
 to '_led_textData' {
